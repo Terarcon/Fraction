@@ -1,4 +1,6 @@
-﻿#include<iostream>
+﻿﻿
+#define _CRT_SECURE_NO_WARNINGS
+#include<iostream>
 using namespace std;
 
 class Fraction;
@@ -6,9 +8,9 @@ Fraction operator*(Fraction left, Fraction right);
 
 class Fraction
 {
-	int integer;
-	int numerator;
-	int denominator;
+	int integer;	//целая часть
+	int numerator;	//числитель
+	int denominator;//знаменатель
 public:
 	int get_integer()const
 	{
@@ -26,7 +28,7 @@ public:
 	{
 		this->integer = integer;
 	}
-	void set_numerator(int integer)
+	void set_numerator(int numerator)
 	{
 		this->numerator = numerator;
 	}
@@ -36,20 +38,20 @@ public:
 		this->denominator = denominator;
 	}
 
-	// Constructors
+	//					Constructors:
 	Fraction()
 	{
 		this->integer = 0;
 		this->numerator = 0;
 		this->denominator = 1;
-		cout << "DefaultConstruct:\t" << this << endl;
+		cout << "DefaultConstruct:" << this << endl;
 	}
 	Fraction(int integer)
 	{
 		this->integer = integer;
 		this->numerator = 0;
 		this->denominator = 1;
-		cout << "1ArgConstructor:\t" << this << endl;
+		cout << "1ArgConstructor:" << this << endl;
 	}
 	Fraction(int numerator, int denominator)
 	{
@@ -58,8 +60,7 @@ public:
 		set_denominator(denominator);
 		cout << "Constructor:\t" << this << endl;
 	}
-
-	Fraction(int integer, int numenator, int denominator)
+	Fraction(int integer, int numerator, int denominator)
 	{
 		this->integer = integer;
 		this->numerator = numerator;
@@ -71,14 +72,14 @@ public:
 		this->integer = other.integer;
 		this->numerator = other.numerator;
 		this->denominator = other.denominator;
-		cout << "CopyConstructor:\t" << this << endl;
+		cout << "CopyConstrcutor:" << this << endl;
 	}
 	~Fraction()
 	{
 		cout << "Destructor:\t" << this << endl;
 	}
 
-	// Operators
+	//					Operators:
 	Fraction& operator=(const Fraction& other)
 	{
 		this->integer = other.integer;
@@ -92,7 +93,7 @@ public:
 		return *this = *this * other;
 	}
 
-	// Methods
+	//					Methods:
 	Fraction& to_improper()
 	{
 		numerator += integer * denominator;
@@ -114,16 +115,18 @@ public:
 	}
 	Fraction& reduce()
 	{
-		int more, less, rest;
-		if (numerator > denominator)more = numerator, less = denominator;
-		else less = numerator, more = denominator;
+		to_proper();
+		int less = numerator;
+		int more = denominator;
+		int rest;
+		if (less == 0)return *this;
 		do
 		{
 			rest = more % less;
 			more = less;
 			less = rest;
 		} while (rest);
-		int GCD = more;
+		int GCD = more;	//GCD - Greatest Common Divisor (Наибольший общий делитель)
 		numerator /= GCD;
 		denominator /= GCD;
 		return *this;
@@ -141,6 +144,7 @@ public:
 		cout << endl;
 	}
 };
+
 Fraction operator*(Fraction left, Fraction right)
 {
 	left.to_improper();
@@ -151,7 +155,6 @@ Fraction operator*(Fraction left, Fraction right)
 		left.get_denominator() * right.get_denominator()
 	).to_proper().reduce();
 }
-
 Fraction operator/(const Fraction& left, const Fraction& right)
 {
 	return left * right.inverted();
@@ -160,16 +163,11 @@ Fraction operator/(const Fraction& left, const Fraction& right)
 bool operator==(Fraction left, Fraction right)
 {
 	left.to_improper();
-	right.to_proper();
-	/*if (left.get_numerator() * right.get_denominator() == right.get_numerator() * left.get_denominator())
-	{
+	right.to_improper();
+	/*if (left.get_numerator()*right.get_denominator() == right.get_numerator()*left.get_denominator())
 		return true;
-	}
 	else
-	{
-		return false;
-	}
-	*/
+		return false;*/
 	return left.get_numerator() * right.get_denominator() == right.get_numerator() * left.get_denominator();
 }
 bool operator!=(const Fraction& left, const Fraction& right)
@@ -188,25 +186,85 @@ bool operator<(Fraction left, Fraction right)
 	right.to_improper();
 	return left.get_numerator() * right.get_denominator() < right.get_numerator() * left.get_denominator();
 }
-bool operator>=(Fraction left, Fraction right)
+bool operator>=(const Fraction& left, const Fraction& right)
 {
-	return left > right || left == right;
+	//return left > right || left == right;
+	return !(left < right);
 }
-bool operator<=(Fraction left, Fraction right)
+bool operator<=(const Fraction& left, const Fraction& right)
 {
-	return left < right || left == right;
+	return !(left > right);
+}
+
+std::ostream& operator<<(std::ostream& os, const Fraction& obj)
+{
+	if (obj.get_integer())os << obj.get_integer();
+	if (obj.get_numerator())
+	{
+		if (obj.get_integer())os << "(";
+		os << obj.get_numerator() << "/" << obj.get_denominator();
+		if (obj.get_integer())os << ")";
+	}
+	else if (obj.get_integer() == 0)os << 0;
+	return os;
+}
+std::istream& operator>>(std::istream& is, Fraction& obj)
+{
+	/*
+	---------------------------------
+	5
+	1/2
+	2 3/4
+	2(3/4)
+	---------------------------------
+	*/
+
+	/*
+	int integer, numerator, denominator;
+	is >> integer >> numerator >> denominator;
+	obj.set_integer(integer);
+	obj.set_numerator(numerator);
+	obj.set_denominator(denominator);
+	*/
+
+	const int SIZE = 256;
+	char buffer[SIZE] = {};
+	is >> buffer;
+	int number[3] = {};
+	int n = 0;	//счетчик введенных чисел
+	char delimiters[] = "()/";
+	for (char* pch = strtok(buffer, delimiters); pch; pch = strtok(NULL, delimiters))
+		number[n++] = std::atoi(pch);
+
+	switch (n)
+	{
+	case 1: obj = Fraction(number[0]); break;
+	case 2:
+		obj = Fraction(number[0], number[1]);
+		/*obj.set_numerator(number[0]);
+		obj.set_denominator(number[1]);*/
+		break;
+	case 3:
+		obj = Fraction(number[0], number[1], number[2]);
+		/*obj.set_integer(number[0]);
+		obj.set_numerator(number[1]);
+		obj.set_denominator(number[2]);*/
+	}
+	return is;
 }
 
 //#define CONSTRUCTORS_CHECK
-#define ARITHMETICAL_OPERATORS_CHECK
+//#define ARITHMETICAL_OPERATORS_CHECK
 //#define COMPARISON_OPERATORS_CHECK
+//#define INPUT_CHECK_1
+//#define INPUT_CHECK_2
 
 void main()
 {
 	setlocale(LC_ALL, "");
 
 #ifdef CONSTRUCTORS_CHECK
-	Fraction A;
+	Fraction A;	//Default constructor
 	A.print();
 
 	Fraction B = 5;
@@ -218,7 +276,7 @@ void main()
 	Fraction D(2, 3, 4);
 	D.print();
 
-	Fraction E = C;
+	Fraction E = C;	//Copy constructor
 	E.print();
 
 	Fraction F;
@@ -230,34 +288,36 @@ void main()
 	Fraction A(2, 3, 4);
 	A.print();
 
-	Fraction B(3, 4, 5);
+	Fraction B(3, 16, 20);
 	B.print();
 
-	/*A.to_improper();
-	A.print();
-
-	A.to_proper();
-	A.print();
-	Fraction C = A * B;
+	/*Fraction C = A * B;
 	C.print();
 
 	Fraction D = A / B;
-	D.print();
-	*/
+	D.print();*/
 
 	A *= B;
 	A.print();
 #endif // ARITHMETICAL_OPERATORS_CHECK
 
 #ifdef COMPARISON_OPERATORS_CHECK
-	Fraction A(1, 2);
-	Fraction B(5, 11);
+	Fraction A(1, 3);
+	Fraction B(5, 10);
 	cout << (A <= B) << endl;
 #endif // COMPARISON_OPERATORS_CHECK
 
-	/*Fraction A(5, 10);
-	A.print();
+#ifdef INPUT_CHECK_1
+	Fraction A(5, 10);
+	cout << "Введите простую дробь: ";  cin >> A;
+	cout << A << endl;
 	A.reduce();
-	A.print();
-	*/
+	cout << A << endl;
+#endif // INPUT_CHECK_1
+
+#ifdef INPUT_CHECK_2
+	Fraction A, B, C;
+	cout << "Введите три простые дроби: "; cin >> A >> B >> C;
+	cout << A << "\t" << B << "\t" << C << endl;
+#endif // INPUT_CHECK_2
 }
