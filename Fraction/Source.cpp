@@ -1,16 +1,18 @@
-﻿﻿
-#define _CRT_SECURE_NO_WARNINGS
+﻿
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include<iostream>
 using namespace std;
+
+#define delimiter "\n-------------------------------------\n"
 
 class Fraction;
 Fraction operator*(Fraction left, Fraction right);
 
 class Fraction
 {
-	int integer;	//целая часть
-	int numerator;	//числитель
-	int denominator;//знаменатель
+	int integer;	
+	int numerator;	
+	int denominator;
 public:
 	int get_integer()const
 	{
@@ -46,12 +48,22 @@ public:
 		this->denominator = 1;
 		cout << "DefaultConstruct:" << this << endl;
 	}
-	Fraction(int integer)
+	explicit Fraction(int integer)
 	{
 		this->integer = integer;
 		this->numerator = 0;
 		this->denominator = 1;
 		cout << "1ArgConstructor:" << this << endl;
+	}
+	Fraction(double decimal)
+	{
+		decimal += 1e-10;	
+		integer = decimal;
+		decimal -= integer;
+		denominator = 1e+9;	
+		numerator = decimal * denominator;
+		reduce();
+		cout << "1ArgDConstructor:\t" << this << endl;
 	}
 	Fraction(int numerator, int denominator)
 	{
@@ -93,6 +105,16 @@ public:
 		return *this = *this * other;
 	}
 
+	//					Type-cast operators
+	explicit operator int()const
+	{
+		return integer;
+	}
+	explicit operator double()const
+	{
+		return integer + (double)numerator / denominator;
+	}
+
 	//					Methods:
 	Fraction& to_improper()
 	{
@@ -115,6 +137,9 @@ public:
 	}
 	Fraction& reduce()
 	{
+		/*int more, less, rest;
+		if (numerator > denominator)more = numerator, less = denominator;
+		else less = numerator, more = denominator;*/
 		to_proper();
 		int less = numerator;
 		int more = denominator;
@@ -126,14 +151,14 @@ public:
 			more = less;
 			less = rest;
 		} while (rest);
-		int GCD = more;	//GCD - Greatest Common Divisor (Наибольший общий делитель)
+		int GCD = more;	
 		numerator /= GCD;
 		denominator /= GCD;
 		return *this;
 	}
 	void print()const
 	{
-		if (integer)cout << integer;
+		if (integer)cout << integer;	
 		if (numerator)
 		{
 			if (integer)cout << "(";
@@ -198,7 +223,7 @@ bool operator<=(const Fraction& left, const Fraction& right)
 
 std::ostream& operator<<(std::ostream& os, const Fraction& obj)
 {
-	if (obj.get_integer())os << obj.get_integer();
+	if (obj.get_integer())os << obj.get_integer();	
 	if (obj.get_numerator())
 	{
 		if (obj.get_integer())os << "(";
@@ -210,26 +235,12 @@ std::ostream& operator<<(std::ostream& os, const Fraction& obj)
 }
 std::istream& operator>>(std::istream& is, Fraction& obj)
 {
-	/*
-	---------------------------------
-	5
-	1/2
-	2 3/4
-	2(3/4)
-	---------------------------------
-	*/
-
-	/*
-	int integer, numerator, denominator;
-	is >> integer >> numerator >> denominator;
-	obj.set_integer(integer);
-	obj.set_numerator(numerator);
-	obj.set_denominator(denominator);
-	*/
+	
 
 	const int SIZE = 256;
 	char buffer[SIZE] = {};
 	is >> buffer;
+	//cin.getline(buffer, SIZE);
 	int number[3] = {};
 	int n = 0;	//счетчик введенных чисел
 	char delimiters[] = "()/";
@@ -258,6 +269,9 @@ std::istream& operator>>(std::istream& is, Fraction& obj)
 //#define COMPARISON_OPERATORS_CHECK
 //#define INPUT_CHECK_1
 //#define INPUT_CHECK_2
+//#define TYPE_CONVERSIONS_BASICS
+//#define CONVERSIONS_FROM_OTHER_TO_CLASS
+//#define CONVERSION_FROM_CLASS_TO_OTHER
 
 void main()
 {
@@ -320,4 +334,56 @@ void main()
 	cout << "Введите три простые дроби: "; cin >> A >> B >> C;
 	cout << A << "\t" << B << "\t" << C << endl;
 #endif // INPUT_CHECK_2
+
+#ifdef TYPE_CONVERSIONS_BASICS
+	//(type)value;	//C-like notation (C-подобная форма записи)
+//type(value);	//Functional notation (Функциональная форма записи)
+
+	int a = 2;		
+	double b = 3;	
+	int c = b;		
+	int d = 5.7;	
+	//int e = "Hello";//Types not compatible
+	cout << 7. / 2 << endl;	
+#endif // TYPE_CONVERSIONS_BASICS
+
+	//1. From other to Class;
+	//2. From Class to other;
+#ifdef CONVERSIONS_FROM_OTHER_TO_CLASS
+	Fraction A = (Fraction)5;
+	//Conversion from other to Class
+	//Single-arguemnt constructor
+	cout << A << endl;
+	cout << delimiter << endl;
+	Fraction B;		//Default constructor
+	cout << delimiter << endl;
+	B = Fraction(8);
+	cout << delimiter << endl;
+	cout << B << endl;
+
+	//Fraction C = 12;	
+	//Fraction C(12);	
+	Fraction C{ 12 };	
+	cout << C << endl;
+#endif // CONVERSIONS_FROM_OTHER_TO_CLASS
+
+#ifdef CONVERSION_FROM_CLASS_TO_OTHER
+	//				Type-cast operators
+
+	Fraction A(2, 1, 2);
+	cout << A << endl;
+	int a = (int)A;
+	cout << a << endl;
+
+	Fraction B(2, 3, 4);
+	cout << B << endl;
+	double b = (double)B;
+	cout << b << endl;
+#endif // CONVERSION_FROM_CLASS_TO_OTHER
+
+	Fraction A = 2.77;
+	cout << A << endl;
+
+	Fraction B = 3.333;
+	cout << B << endl;
 }
